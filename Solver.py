@@ -1,5 +1,6 @@
 
 import numpy as np
+from matplotlib import pyplot as plt
 from typing import Callable
 
 from Frame import Frame
@@ -14,7 +15,7 @@ class PanelMethodSolver:
     dt = 0.01
 
     structure_generator: Callable[[float, int], type[np.array]]
-    structure_velocity: type[np.array] = np.array([1, 0])
+    structure_velocity: type[np.array] = np.array([10, 0])
     shedding_distance: float = 0.01
 
 
@@ -36,7 +37,6 @@ class PanelMethodSolver:
         )
         frames = [initial_frame]
         while frames[-1].time <= time[1]:
-            print(frames[-1].time)
             frames.append(self.step(frames[-1]))
         return frames
 
@@ -64,12 +64,12 @@ class PanelMethodSolver:
                     a_ij = projection_coef(vort_loc, eval_loc)
                     induced_velocity += flow_vortices[j].circulation * a_ij
 
-                # Iterate over all structure vortices
-                for k in range(n_panels):
-                    vort_loc = prev_frame.panels[k].vortex_location
-                    a_ij = projection_coef(vort_loc, eval_loc)
-
-                    induced_velocity += prev_frame.panels[k].vortex_circulation * a_ij
+                # # Iterate over all structure vortices
+                # for k in range(n_panels):
+                #     vort_loc = prev_frame.panels[k].vortex_location
+                #     a_ij = projection_coef(vort_loc, eval_loc)
+                #
+                #     induced_velocity += prev_frame.panels[k].vortex_circulation * a_ij
 
                 # Combine all flow velocities
                 vortex_velocities[i] = - induced_velocity + self.structure_velocity
@@ -137,7 +137,7 @@ def flat_plate_generator(time: float, n: int) -> list[type[Panel]]:
     return panels
 
 def flapping_plate_generator(time: float, n: int) -> list[type[Panel]]:
-    alpha = 1 * np.cos(time)
+    alpha = -0.75 * np.sin(2 * np.pi * time)
     start = [0, 0]
     end = [np.cos(alpha), np.sin(alpha)]
     v_start = [0, 0]
@@ -149,9 +149,18 @@ def flapping_plate_generator(time: float, n: int) -> list[type[Panel]]:
     return panels
 
 if __name__ == "__main__":
-    solver = PanelMethodSolver(flat_plate_generator)
-    frames = solver.simulate((0, 10))
-    t = [frame.time for frame in frames]
-    print(t)
+    from Frame import saveFrames
+
+    solver = PanelMethodSolver(flapping_plate_generator)
+    solver.n_panels = 25
+    frames = solver.simulate((0, 5))
+
+    print(frames[-1].lift_coeff(10))
 
     frames[-1].display()
+    plt.title(f"Simulation of flapping plate, n = {solver.n_panels}, C_l = {frames[-1].lift_coeff()}")
+    plt.savefig(f"Results/SolverTest/{solver.n_panels:05}_panels.png")
+    plt.show()
+
+    directory = "Results/SolverTest"
+    saveFrames(directory, frames)

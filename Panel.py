@@ -19,7 +19,7 @@ class Panel:
 
     vortex_distance: float = 0.25
     collocation_distance: float = 0.75
-    vortex_circulation: float
+    vortex_circulation: float = None
 
     def __init__(self, start, end, v_start = None, v_end = None):
         self.start = start
