@@ -13,6 +13,7 @@ class Structure:
 
     def discretize(self, time: float, n: int):
         self.panels = self.generator(time, n)
+        return self.panels
 
     def display(self, **kwargs):
         for panel in self.panels:

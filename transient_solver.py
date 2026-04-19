@@ -1,4 +1,4 @@
-from operator import truediv
+
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -15,20 +15,33 @@ def flat_plate_generator(time: float, n: int) -> list[type[Panel]]:
     panels = points_to_panels(positions)
     return panels
 
-structure = Structure(flat_plate_generator)
-n: int = 100
-dt = 0.01
+def flapping_plate_generator(time: float, n: int) -> list[type[Panel]]:
+    alpha = 1 * np.sin(time)
+    start = [0,0]
+    end = [np.cos(alpha), np.sin(alpha)]
+    v_start = [0, 0]
+    v_end = [-np.sin(alpha), np.cos(alpha)]
+
+
+    positions = np.linspace(start, end, n+1)
+    velocities = np.linspace(v_start, v_end, n+1)
+    panels = points_to_panels(positions, velocities)
+    return panels
+
+structure = Structure(flapping_plate_generator)
+n: int = 25
+dt = 0.05
 frames: list[Frame] = []
 
-flow_velocity = np.array([-1, 0])
+flow_velocity = np.array([1, 0])
 
 vortex_shedding = True
-shedding_distance = 0.1
+shedding_distance = 0.01
 
 flow_vortices: list[FlowVortex] = []
 
 time = 0
-while time < 2:
+while time < 10:
     print("time: ", time)
     # Move flow vortices
     n_vortex = len(flow_vortices)
@@ -42,7 +55,7 @@ while time < 2:
             vortex_loc = flow_vortices[j].position
             a_ij = projection_coef(vortex_loc, eval_loc)
             u += flow_vortices[j].circulation * a_ij
-        vortex_velocities[i] = u - flow_velocity
+        vortex_velocities[i] = -u + flow_velocity
 
     for i in range(n_vortex):
         flow_vortices[i].position = flow_vortices[i].position + vortex_velocities[i] * dt
@@ -105,8 +118,15 @@ while time < 2:
     ))
     time += dt
 
-structure.display()
-for vortex in flow_vortices:
-    plt.scatter(vortex.position[0], vortex.position[1], marker="x", c="black")
-plt.axis('equal')
+# structure.display(c="black")
+frames[-1].display()
+
+print(frames[-1].lift_coeff())
+
+t = []
+C_l = []
+for frame in frames:
+    t.append(frame.time)
+    C_l.append(frame.lift_coeff())
+plt.scatter(t, C_l)
 plt.show()
