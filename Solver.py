@@ -28,7 +28,7 @@ class PanelMethodSolver:
             t_f = time
         else:
             t_i, t_f = time
-
+        print(f"Starting simulation: n = {self.n_panels}, dt = {self.dt}", end = " ... ")
         structure = Structure(self.structure_generator)
         initial_frame = Frame(
             time[0] - self.dt,
@@ -38,6 +38,7 @@ class PanelMethodSolver:
         frames = [initial_frame]
         while frames[-1].time <= time[1]:
             frames.append(self.step(frames[-1]))
+        print("Done!")
         return frames
 
     def step(self, prev_frame: Frame) -> Frame:
@@ -64,12 +65,12 @@ class PanelMethodSolver:
                     a_ij = projection_coef(vort_loc, eval_loc)
                     induced_velocity += flow_vortices[j].circulation * a_ij
 
-                # # Iterate over all structure vortices
-                # for k in range(n_panels):
-                #     vort_loc = prev_frame.panels[k].vortex_location
-                #     a_ij = projection_coef(vort_loc, eval_loc)
-                #
-                #     induced_velocity += prev_frame.panels[k].vortex_circulation * a_ij
+                # Iterate over all structure vortices
+                for k in range(n_panels):
+                    vort_loc = prev_frame.panels[k].vortex_location
+                    a_ij = projection_coef(vort_loc, eval_loc)
+
+                    induced_velocity += prev_frame.panels[k].vortex_circulation * a_ij
 
                 # Combine all flow velocities
                 vortex_velocities[i] = - induced_velocity + self.structure_velocity
@@ -119,7 +120,7 @@ class PanelMethodSolver:
 
         # --- SAVE FRAME ---
         # Add shed vortex
-        shed_vortex_loc = panels[-1].end + self.shedding_distance * (panels[-1].end - panels[-1].start)
+        shed_vortex_loc = panels[-1].end + self.shedding_distance * (panels[-1].end - panels[0].start)
         shed_vortex = FlowVortex(shed_vortex_loc, circulations[-1, 0])
 
         # Create flow_vortex list

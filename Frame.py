@@ -29,6 +29,7 @@ class Frame:
             Y.append(vortex.position[1])
             G.append(vortex.circulation)
         plt.scatter(X, Y, 10, G, cmap="bwr")
+        plt.colorbar()
         plt.axis('equal')
 
     def lift_coeff(self, u: float = 1):
